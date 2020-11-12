@@ -1,0 +1,56 @@
+# Código completo para el video EL TEOREMA DEL LÍMITE CENTRAL https://www.youtube.com/watch?v=3vin2OLq3JQ&t=229s
+
+# Para declarar la librería data.table
+library(data.table)
+
+# Para llamar la base de datos toy_dataset.csv
+datos <- fread("D:/Documents/NUEVOS/PREMIERE PRO PROYECTOS EN/EL TEOREMA DEL LÍMITE CENTRAL/RECURSOS/toy_dataset.csv")
+
+# Para calcular la media y la DE: 
+promedio_datos <- mean(datos$Income)
+desviacion_datos <- sd(datos$Income)
+
+#Para ver el histograma de la variable Income:
+library(ggplot2)
+p <- ggplot(datos) 
+p + aes(x = Income) + geom_histogram()
+
+# Para observar mejor la curva de densidad de la variable Income
+d <- density(datos$Income, adjust = 1.8)
+plot(d, main = "Densidad de la variable Income")
+polygon(d, col="#f8f025", border = "white")
+lines(d, col ="#000000", lwd = 3)
+
+# Para generar 1.000 muestras de 100 registros
+muestras <- c()
+for(i in 1:1000){
+   tmp <- sample(datos$Income, size = 100)
+   tmp <- as.data.table(tmp)
+   tmp[, grupo := i] 
+   l <- list(muestras, tmp)
+   muestras <- rbindlist(l) 
+}
+
+# Para crear un objeto tipo data.table con la media de cada muestra
+distribucionmedias <- muestras[, mean(tmp), by = grupo]
+setnames(distribucionmedias, "V1", "promedio")
+
+# Para calcular la media de todas estas medias
+# Y compararla con la media de toda la población
+promedio_muestra <- mean(distribucionmedias$promedio)
+
+# Para graficar la distribución de las medias de las 1.000 muestras
+d <- density(distribucionmedias$promedio, adjust = 1.8)
+plot(d, main = "Densidad de la variable Income")
+polygon(d, col="#f30202", border = "white")
+lines(d, col ="#000000", lwd = 3)
+
+# Para crear dos gráficos, con 100 y con 1.000 medias
+par(mfrow = c(2,1), col.axis = "white", col.lab = "white", tck = 0, mai = c(0.3, 0.3, 0.3, 0.3))
+for (i in c(1,10)){
+n <- 100*i
+dgrid <- density(distribucionmedias$promedio[1:n], adjust = 1.8)
+plot(dgrid, main = paste0("Muestra de ", n, " unidades"))
+polygon(dgrid, col="#f8d025", border = "white")
+lines(dgrid, col ="#000000", lwd = 3)
+}
